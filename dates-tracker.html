@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amore — Dating Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0a0e;
+    --surface: #16121a;
+    --surface2: #1e1924;
+    --border: #2e2738;
+    --accent: #c9a96e;
+    --accent2: #e8c4a0;
+    --pink: #d4789a;
+    --green: #7bc9a0;
+    --blue: #7ab5d4;
+    --purple: #a07bca;
+    --red: #d47a7a;
+    --text: #f0eaf5;
+    --muted: #7a6d8a;
+    --glow: rgba(201, 169, 110, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo span { font-style: italic; color: var(--accent2); }
+  .tagline { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    padding: 9px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); color: var(--bg); font-weight: 600; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+
+  /* KPI ROW */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 32px; }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--kpi-color, var(--accent));
+  }
+  .kpi-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .kpi-value { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--text); }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .kpi-delta { font-size: 11px; font-weight: 600; margin-top: 4px; }
+  .delta-up { color: var(--green); }
+  .delta-down { color: var(--red); }
+
+  /* FUNNEL */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .funnel-container { margin-bottom: 32px; }
+  .funnel-stages { display: flex; gap: 0; margin-bottom: 20px; }
+  .funnel-stage {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-right: none;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .funnel-stage:first-child { border-radius: 8px 0 0 8px; }
+  .funnel-stage:last-child { border-right: 1px solid var(--border); border-radius: 0 8px 8px 0; }
+  .funnel-stage::after {
+    content: '›';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 18px;
+    z-index: 2;
+  }
+  .funnel-stage:last-child::after { display: none; }
+  .funnel-stage:hover, .funnel-stage.active {
+    background: var(--surface2);
+    border-color: var(--stage-color);
+    z-index: 1;
+  }
+  .stage-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--stage-color);
+    display: inline-block; margin-right: 6px;
+  }
+  .stage-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+  .stage-count { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--text); }
+  .stage-conv { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* PIPELINE BOARD */
+  .pipeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 32px; overflow-x: auto; }
+  .pipeline-col { min-width: 200px; }
+  .col-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    background: var(--surface2);
+  }
+  .col-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
+  .col-badge {
+    background: var(--stage-color);
+    color: var(--bg);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .col-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0 0 8px 8px;
+    padding: 10px;
+    min-height: 420px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  /* PERSON CARD */
+  .person-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .person-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .person-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 4px; bottom: 4px;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--card-accent, var(--accent));
+  }
+  .card-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--card-accent, var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: var(--bg);
+    margin-bottom: 8px;
+  }
+  .card-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .card-meta { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tag.hot { border-color: var(--pink); color: var(--pink); }
+  .tag.warm { border-color: var(--accent); color: var(--accent); }
+  .tag.cold { border-color: var(--blue); color: var(--blue); }
+  .tag.vibe { border-color: var(--green); color: var(--green); }
+  .card-score {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 6px;
+  }
+  .score-bar-bg { flex: 1; height: 4px; background: var(--border); border-radius: 2px; margin-right: 8px; }
+  .score-bar { height: 100%; border-radius: 2px; background: var(--card-accent, var(--accent)); }
+  .score-val { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+  .card-action {
+    margin-top: 8px;
+    padding: 5px 10px;
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    border-radius: 5px;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .card-action:hover { border-color: var(--accent); color: var(--accent); }
+  .card-days {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .days-warn { color: var(--red); }
+
+  /* CONVERSION RATES */
+  .conversion-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .conv-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .conv-title { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+  .conv-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .conv-label { font-size: 12px; color: var(--text); width: 130px; flex-shrink: 0; }
+  .conv-bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; }
+  .conv-bar { height: 100%; border-radius: 3px; }
+  .conv-pct { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); width: 36px; text-align: right; }
+
+  /* INSIGHTS / NBA */
+  .insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .insight-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .insight-icon { font-size: 18px; }
+  .insight-heading { font-family: 'Playfair Display', serif; font-size: 15px; color: var(--accent2); }
+  .nba-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .nba-item:last-child { border-bottom: none; }
+  .nba-priority {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    margin-top: 5px;
+  }
+  .priority-high { background: var(--pink); }
+  .priority-med { background: var(--accent); }
+  .priority-low { background: var(--blue); }
+  .nba-text { font-size: 12px; line-height: 1.5; }
+  .nba-name { color: var(--accent2); font-weight: 600; }
+  .nba-action { color: var(--text); }
+  .nba-reason { color: var(--muted); font-size: 11px; }
+
+  .feature-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .feature-item:last-child { border-bottom: none; }
+  .feature-emoji { font-size: 14px; }
+  .feature-text { font-size: 12px; line-height: 1.5; color: var(--text); }
+  .feature-sub { font-size: 11px; color: var(--muted); }
+
+  /* ADD MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; display: block; }
+  .form-input, .form-select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 9px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+  /* DETAIL PANEL */
+  .detail-panel {
+    display: none;
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    width: 360px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    z-index: 90;
+    padding: 24px;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+  .detail-panel.open { display: block; transform: translateX(0); }
+  .panel-close { cursor: pointer; color: var(--muted); font-size: 20px; float: right; }
+  .panel-name { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--accent2); margin: 16px 0 4px; clear: both; }
+  .panel-stage { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+  .panel-section { margin-bottom: 20px; }
+  .panel-section-title { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  .timeline-item { display: flex; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+  .timeline-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 4px; }
+  .timeline-text { color: var(--text); }
+  .timeline-date { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; }
+
+  .rating-stars { display: flex; gap: 4px; font-size: 16px; }
+  .star { cursor: pointer; transition: transform 0.1s; }
+  .star:hover { transform: scale(1.3); }
+
+  .notes-area {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); padding: 9px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; resize: vertical;
+    min-height: 80px; outline: none;
+  }
+  .notes-area:focus { border-color: var(--accent); }
+
+  /* FLAGS */
+  .flags-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .flag-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: default;
+    position: relative;
+  }
+  .flag-chip.green { background: rgba(123,201,160,0.15); border: 1px solid rgba(123,201,160,0.4); color: var(--green); }
+  .flag-chip.red   { background: rgba(212,122,122,0.15); border: 1px solid rgba(212,122,122,0.4); color: var(--red); }
+  .flag-chip .remove-flag {
+    cursor: pointer; opacity: 0.5; font-size: 12px; line-height: 1;
+    margin-left: 2px; transition: opacity 0.2s;
+  }
+  .flag-chip .remove-flag:hover { opacity: 1; }
+  .flag-input-row { display: flex; gap: 6px; align-items: center; }
+  .flag-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); padding: 7px 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .flag-input:focus { border-color: var(--accent); }
+  .flag-btn {
+    padding: 7px 12px; border-radius: 6px; border: none; cursor: pointer;
+    font-size: 12px; font-weight: 600; transition: all 0.15s; white-space: nowrap;
+  }
+  .flag-btn.green { background: rgba(123,201,160,0.2); color: var(--green); border: 1px solid rgba(123,201,160,0.3); }
+  .flag-btn.green:hover { background: rgba(123,201,160,0.35); }
+  .flag-btn.red   { background: rgba(212,122,122,0.2); color: var(--red); border: 1px solid rgba(212,122,122,0.3); }
+  .flag-btn.red:hover { background: rgba(212,122,122,0.35); }
+
+  /* Flag summary on card */
+  .card-flags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+  .mini-flag {
+    font-size: 9px; padding: 1px 6px; border-radius: 10px; font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .mini-flag.green { background: rgba(123,201,160,0.15); color: var(--green); border: 1px solid rgba(123,201,160,0.3); }
+  .mini-flag.red   { background: rgba(212,122,122,0.15); color: var(--red);   border: 1px solid rgba(212,122,122,0.3); }
+
+  /* DATE COMMENTS / LOG */
+  .date-log-entry {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 13px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .date-log-entry:hover .del-log { opacity: 1; }
+  .del-log {
+    position: absolute; top: 8px; right: 10px;
+    cursor: pointer; color: var(--muted); font-size: 13px; opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+  }
+  .del-log:hover { color: var(--red); }
+  .log-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .log-date-badge {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 4px; color: var(--muted);
+  }
+  .log-stage-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 4px;
+    font-weight: 600;
+  }
+  .log-rating { font-size: 12px; }
+  .log-comment { font-size: 12px; color: var(--text); line-height: 1.55; margin-bottom: 6px; }
+  .log-flags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+
+  .add-log-form {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 6px;
+  }
+  .add-log-form textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); padding: 8px 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; resize: none;
+    height: 60px; outline: none; margin-bottom: 8px;
+  }
+  .add-log-form textarea:focus { border-color: var(--accent); }
+  .log-form-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .rating-pick { display: flex; gap: 3px; font-size: 18px; cursor: pointer; }
+  .rating-pick span { transition: transform 0.1s; }
+  .rating-pick span:hover { transform: scale(1.3); }
+
+  .next-action-box {
+    background: linear-gradient(135deg, rgba(201,169,110,0.1), rgba(212,120,154,0.08));
+    border: 1px solid rgba(201,169,110,0.3);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .person-card { animation: fadeIn 0.3s ease; }
+
+  .empty-col { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; font-style: italic; }
+
+  @media (max-width: 900px) {
+    .pipeline { grid-template-columns: repeat(3, 1fr); }
+    .conversion-grid, .insights-grid { grid-template-columns: 1fr; }
+    .funnel-stages { flex-wrap: wrap; }
+    .funnel-stage { min-width: 45%; border-radius: 6px; border: 1px solid var(--border) !important; }
+    .funnel-stage::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="logo">♡ Amore <span>Pipeline</span></div>
+        <div class="tagline">Your dating CRM · Track · Convert · Connect</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" onclick="exportData()">↓ Export</button>
+        <button class="btn btn-primary" onclick="openModal()">+ Add Lead</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPIs -->
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- FUNNEL OVERVIEW -->
+  <div class="funnel-container">
+    <div class="section-title">Funnel Overview</div>
+    <div class="funnel-stages" id="funnelStages"></div>
+  </div>
+
+  <!-- PIPELINE BOARD -->
+  <div class="section-title">Active Pipeline</div>
+  <div class="pipeline" id="pipelineBoard"></div>
+
+  <!-- CONVERSION RATES + FEATURES -->
+  <div class="conversion-grid">
+    <div class="conv-card">
+      <div class="conv-title">Stage Conversion Rates</div>
+      <div id="convRates"></div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-title">Attraction Signals</div>
+      <div id="signals"></div>
+    </div>
+  </div>
+
+  <!-- NBA + STANDOUT FEATURES -->
+  <div class="insights-grid">
+    <div class="insight-card">
+      <div class="insight-header">
+        <div class="insight-icon">⚡</div>
+        <div class="insight-heading">Next Best Actions</div>
+      </div>
+      <div id="nbaList"></div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-header">
+        <div class="insight-icon">✦</div>
+        <div class="insight-heading">Standout Features</div>
+      </div>
+      <div id="standoutFeatures"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalIfBg(event)">
+  <div class="modal">
+    <div class="modal-title">Add a New Lead ♡</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input class="form-input" id="inp-name" placeholder="Alex...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Age</label>
+        <input class="form-input" id="inp-age" type="number" placeholder="28">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Where You Met</label>
+      <input class="form-input" id="inp-source" placeholder="Hinge, Coffee shop, Friend intro...">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Initial Stage</label>
+        <select class="form-select" id="inp-stage">
+          <option value="0">Lead</option>
+          <option value="1">Texting</option>
+          <option value="2">First Date</option>
+          <option value="3">Seeing Again</option>
+          <option value="4">Exclusive?</option>
+          <option value="5">Relationship</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vibe Check</label>
+        <select class="form-select" id="inp-vibe">
+          <option value="hot">🔥 Hot</option>
+          <option value="warm">✨ Warm</option>
+          <option value="cold">❄️ Cold</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Standout Feature</label>
+      <input class="form-input" id="inp-feature" placeholder="Great sense of humor, adventurous...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="notes-area" id="inp-notes" placeholder="First impressions, common interests..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addPerson()">Add to Pipeline</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detailPanel">
+  <span class="panel-close" onclick="closePanel()">✕</span>
+  <div id="panelContent"></div>
+</div>
+
+<script>
+const STAGES = [
+  { name: 'Lead', color: '#7ab5d4', emoji: '👀' },
+  { name: 'Texting', color: '#a07bca', emoji: '💬' },
+  { name: 'First Date', color: '#c9a96e', emoji: '☕' },
+  { name: 'Seeing Again', color: '#e8c4a0', emoji: '💛' },
+  { name: 'Exclusive?', color: '#d4789a', emoji: '💕' },
+  { name: 'Relationship', color: '#7bc9a0', emoji: '💚' },
+];
+
+const SIGNALS = [
+  { label: 'Double texted first', val: 72, color: '#d4789a' },
+  { label: 'Suggested next date', val: 85, color: '#7bc9a0' },
+  { label: 'Shared playlists', val: 58, color: '#a07bca' },
+  { label: 'Met friends/fam', val: 40, color: '#c9a96e' },
+  { label: 'Deep late-night calls', val: 65, color: '#7ab5d4' },
+];
+
+let people = [
+  { id: 1, name: 'Jordan', age: 28, source: 'Hinge', stage: 0, vibe: 'warm', feature: 'Witty texter, loves hiking', notes: 'Matched last week. Sarcastic humor.', score: 62, days: 3, timeline: ['Matched on Hinge', 'Sent first message'], greenFlags: ['Asks thoughtful questions', 'Responds quickly'], redFlags: [], dateLogs: [] },
+  { id: 2, name: 'Riley', age: 31, source: 'Coffee shop', stage: 1, vibe: 'hot', feature: 'Incredible laugh, chef', notes: 'Asked for number. Lives nearby.', score: 85, days: 5, timeline: ['Met at Blue Bottle', 'Exchanged numbers', 'Been texting daily'], greenFlags: ['Made me laugh a lot', 'Very attentive'], redFlags: ['Mentioned ex twice'], dateLogs: [] },
+  { id: 3, name: 'Morgan', age: 26, source: 'Friend intro', stage: 2, vibe: 'warm', feature: 'Passionate about art, well-traveled', notes: 'Great coffee date! 2 hrs flew by.', score: 78, days: 1, timeline: ['Intro via Sam', 'DMs for 2 weeks', 'Coffee at Pressed'], greenFlags: ['Great listener', 'Offered to split bill'], redFlags: [], dateLogs: [{ id: 'd1', date: '2026-05-10', stage: 'First Date', rating: 4, comment: 'Coffee at Pressed — incredible convo about travel. Time flew by. She suggested we go to the art museum next!', greenFlags: ['Suggested next date herself'], redFlags: [] }] },
+  { id: 4, name: 'Casey', age: 29, source: 'Bumble', stage: 3, vibe: 'hot', feature: 'Adventurous, reads my genre', notes: 'Date 2 was dinner. Date 3 coming.', score: 91, days: 2, timeline: ['Matched on Bumble', 'First date: tacos', 'Second: gallery walk'], greenFlags: ['Very emotionally open', 'We have identical music taste'], redFlags: ['Can be a bit flaky on timing'], dateLogs: [{ id: 'd2', date: '2026-05-01', stage: 'First Date', rating: 5, comment: 'Best first date I\'ve had in years. Tacos and talking until 1am.', greenFlags: ['Kept eye contact the whole time'], redFlags: [] }, { id: 'd3', date: '2026-05-12', stage: 'Seeing Again', rating: 4, comment: 'Gallery walk was great. Opened up about her family. Was 20 min late though.', greenFlags: ['Remembered detail I mentioned on date 1'], redFlags: ['Arrived 20 min late, no heads-up'] }] },
+  { id: 5, name: 'Alex', age: 33, source: 'Work event', stage: 4, vibe: 'hot', feature: 'Brilliant, emotionally available', notes: 'The "what are we" talk is near.', score: 95, days: 7, timeline: ['Met at conference', '3 months of dates', 'Met each other\'s dogs'], greenFlags: ['Incredibly supportive', 'Met all my friends', 'Communicates clearly'], redFlags: ['Busy schedule — hard to plan ahead'], dateLogs: [] },
+  { id: 6, name: 'Sam', age: 27, source: 'Instagram', stage: 0, vibe: 'cold', feature: 'Great aesthetic, musician', notes: 'Replied to a story. Low engagement.', score: 30, days: 10, timeline: ['Followed for a while', 'Replied to story'], greenFlags: [], redFlags: ['Very slow to reply', 'One-word answers'], dateLogs: [] },
+  { id: 7, name: 'Drew', age: 30, source: 'OkCupid', stage: 1, vibe: 'warm', feature: 'Marathoner, dog person', notes: 'Solid convos. Slow to respond.', score: 55, days: 4, timeline: ['Matched', 'Exchanged numbers'], greenFlags: ['Consistent texter'], redFlags: [], dateLogs: [] },
+];
+
+let nextId = 8;
+
+function getStageColor(stageIdx) { return STAGES[stageIdx]?.color || '#c9a96e'; }
+
+function renderKPIs() {
+  const totalLeads = people.length;
+  const active = people.filter(p => p.stage > 0 && p.stage < 5).length;
+  const avgScore = Math.round(people.reduce((s, p) => s + p.score, 0) / people.length);
+  const inRelationship = people.filter(p => p.stage === 5).length;
+  const hotLeads = people.filter(p => p.vibe === 'hot').length;
+  const convRate = Math.round((people.filter(p => p.stage >= 2).length / totalLeads) * 100);
+
+  const kpis = [
+    { label: 'Total Pipeline', value: totalLeads, sub: 'Active people', delta: '+3 this month', up: true, color: '#7ab5d4' },
+    { label: 'Active Convos', value: active, sub: 'Texting or dating', delta: '+1 this week', up: true, color: '#a07bca' },
+    { label: 'Avg Vibe Score', value: avgScore + '%', sub: 'Engagement index', delta: '+4pts', up: true, color: '#c9a96e' },
+    { label: 'Hot Leads 🔥', value: hotLeads, sub: 'High momentum', delta: 'Needs action', up: false, color: '#d4789a' },
+    { label: 'Date Conv. Rate', value: convRate + '%', sub: 'Lead → First Date', delta: 'above avg', up: true, color: '#7bc9a0' },
+    { label: 'Relationships', value: inRelationship, sub: 'End of funnel', delta: 'Goal: 1', up: true, color: '#7bc9a0' },
+  ];
+
+  document.getElementById('kpiRow').innerHTML = kpis.map(k => `
+    <div class="kpi-card" style="--kpi-color:${k.color}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      <div class="kpi-delta ${k.up ? 'delta-up' : 'delta-down'}">${k.up ? '↑' : '↓'} ${k.delta}</div>
+    </div>
+  `).join('');
+}
+
+function renderFunnel() {
+  const stageCounts = STAGES.map((_, i) => people.filter(p => p.stage === i).length);
+  document.getElementById('funnelStages').innerHTML = STAGES.map((s, i) => {
+    const conv = i === 0 ? '100%' : stageCounts[i-1] > 0 ? Math.round((stageCounts[i] / stageCounts[i-1]) * 100) + '% conv' : '—';
+    return `
+      <div class="funnel-stage" style="--stage-color:${s.color}">
+        <div class="stage-name"><span class="stage-dot" style="background:${s.color}"></span>${s.emoji} ${s.name}</div>
+        <div class="stage-count">${stageCounts[i]}</div>
+        <div class="stage-conv">${conv}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPipeline() {
+  document.getElementById('pipelineBoard').innerHTML = STAGES.map((s, i) => {
+    const cards = people.filter(p => p.stage === i);
+    return `
+      <div class="pipeline-col">
+        <div class="col-header" style="--stage-color:${s.color}">
+          <div class="col-title" style="color:${s.color}">${s.emoji} ${s.name}</div>
+          <div class="col-badge" style="background:${s.color}">${cards.length}</div>
+        </div>
+        <div class="col-body">
+          ${cards.length === 0 ? '<div class="empty-col">No one here yet</div>' : ''}
+          ${cards.map(p => renderCard(p, s.color)).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCard(p, color) {
+  const initials = p.name.slice(0,2).toUpperCase();
+  const daysWarn = p.days > 7;
+  const nba = getNextAction(p);
+  return `
+    <div class="person-card" style="--card-accent:${color}" onclick="openPanel(${p.id})">
+      <div class="card-avatar" style="background:${color}">${initials}</div>
+      <div class="card-name">${p.name}, ${p.age}</div>
+      <div class="card-meta">📍 ${p.source}</div>
+      <div class="card-tags">
+        <span class="tag ${p.vibe}">${p.vibe === 'hot' ? '🔥 Hot' : p.vibe === 'warm' ? '✨ Warm' : '❄️ Cold'}</span>
+        ${p.feature ? `<span class="tag vibe">${p.feature.split(',')[0].trim().slice(0,18)}</span>` : ''}
+      </div>
+      <div class="card-score">
+        <div class="score-bar-bg"><div class="score-bar" style="width:${p.score}%;background:${color}"></div></div>
+        <div class="score-val">${p.score}%</div>
+      </div>
+      <div class="card-days ${daysWarn ? 'days-warn' : ''}">
+        ${daysWarn ? '⚠️' : '🕐'} ${p.days}d since last contact
+      </div>
+      ${(p.greenFlags?.length || p.redFlags?.length) ? `<div class="card-flags">
+        ${(p.greenFlags||[]).slice(0,2).map(f => `<span class="mini-flag green">🟢 ${f.slice(0,20)}</span>`).join('')}
+        ${(p.redFlags||[]).slice(0,2).map(f => `<span class="mini-flag red">🔴 ${f.slice(0,20)}</span>`).join('')}
+      </div>` : ''}
+      <div class="card-action" onclick="event.stopPropagation();openPanel(${p.id})">${nba.short}</div>
+    </div>
+  `;
+}
+
+function getNextAction(p) {
+  if (p.stage === 0 && p.vibe === 'hot') return { short: '→ Slide into DMs', full: 'Send a warm, witty opening message that references something from their profile.' };
+  if (p.stage === 0) return { short: '→ Send opener', full: 'Craft a personalized first message. Reference their interests.' };
+  if (p.stage === 1 && p.days > 3) return { short: '→ Ask them out!', full: 'You\'ve been texting a while — ask for that first date. Be specific with place + time.' };
+  if (p.stage === 1) return { short: '→ Keep texting / plan date', full: 'Keep the conversation engaging. Look for a natural moment to suggest meeting up.' };
+  if (p.stage === 2) return { short: '→ Follow up after date', full: 'Send a warm follow-up. Mention a specific detail from the date. Gauge interest.' };
+  if (p.stage === 3) return { short: '→ Plan date #2+', full: 'Build on momentum. Suggest an activity that aligns with a shared interest you discovered.' };
+  if (p.stage === 4) return { short: '→ Have "the talk"', full: 'If you\'re both into it, it\'s time to define the relationship. Be clear and vulnerable.' };
+  if (p.stage === 5) return { short: '→ You did it! 💚', full: 'Focus on deepening the connection. Plan something meaningful together.' };
+  return { short: '→ Check in', full: 'Reach out and see how they\'re doing.' };
+}
+
+function renderConvRates() {
+  const pairs = [
+    ['Lead → Texting', 0, 1],
+    ['Texting → First Date', 1, 2],
+    ['First → Seeing Again', 2, 3],
+    ['Seeing → Exclusive?', 3, 4],
+    ['Exclusive → Together', 4, 5],
+  ];
+  const colors = ['#7ab5d4','#a07bca','#c9a96e','#d4789a','#7bc9a0'];
+  document.getElementById('convRates').innerHTML = pairs.map(([label, from, to], i) => {
+    const fromCount = people.filter(p => p.stage >= from).length;
+    const toCount = people.filter(p => p.stage >= to).length;
+    const pct = fromCount > 0 ? Math.round((toCount / fromCount) * 100) : 0;
+    return `
+      <div class="conv-row">
+        <div class="conv-label">${label}</div>
+        <div class="conv-bar-bg"><div class="conv-bar" style="width:${pct}%;background:${colors[i]}"></div></div>
+        <div class="conv-pct">${pct}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSignals() {
+  document.getElementById('signals').innerHTML = SIGNALS.map(s => `
+    <div class="conv-row">
+      <div class="conv-label">${s.label}</div>
+      <div class="conv-bar-bg"><div class="conv-bar" style="width:${s.val}%;background:${s.color}"></div></div>
+      <div class="conv-pct">${s.val}%</div>
+    </div>
+  `).join('');
+}
+
+function renderNBA() {
+  const urgent = people
+    .filter(p => p.stage < 5)
+    .sort((a, b) => (b.score * (b.vibe==='hot'?1.5:1)) - (a.score * (a.vibe==='hot'?1.5:1)))
+    .slice(0, 5);
+
+  document.getElementById('nbaList').innerHTML = urgent.map(p => {
+    const action = getNextAction(p);
+    const priority = p.vibe === 'hot' ? 'high' : p.score > 70 ? 'med' : 'low';
+    return `
+      <div class="nba-item">
+        <div class="nba-priority priority-${priority}"></div>
+        <div class="nba-text">
+          <div class="nba-action"><span class="nba-name">${p.name}</span> · ${action.short.replace('→ ', '')}</div>
+          <div class="nba-reason">${action.full.slice(0, 70)}...</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderStandout() {
+  const features = [
+    { emoji: '🔥', title: 'Vibe scoring', sub: 'Hot/warm/cold momentum tracking per person' },
+    { emoji: '📊', title: 'Funnel analytics', sub: 'Real conversion rates from lead to relationship' },
+    { emoji: '⏱️', title: 'Idle alerts', sub: 'Flags people you haven\'t contacted in 7+ days' },
+    { emoji: '⚡', title: 'Next Best Action', sub: 'Stage-aware AI-style recommendations' },
+    { emoji: '🟢', title: 'Green & Red flags', sub: 'Track patterns per person — visible on cards' },
+    { emoji: '📅', title: 'Date journal', sub: 'Starred reviews + flag capture after each date' },
+  ];
+  document.getElementById('standoutFeatures').innerHTML = features.map(f => `
+    <div class="feature-item">
+      <div class="feature-emoji">${f.emoji}</div>
+      <div>
+        <div class="feature-text">${f.title}</div>
+        <div class="feature-sub">${f.sub}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+function closeModalIfBg(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function addPerson() {
+  const name = document.getElementById('inp-name').value.trim();
+  if (!name) return;
+  const p = {
+    id: nextId++,
+    name,
+    age: parseInt(document.getElementById('inp-age').value) || 25,
+    source: document.getElementById('inp-source').value || 'Unknown',
+    stage: parseInt(document.getElementById('inp-stage').value),
+    vibe: document.getElementById('inp-vibe').value,
+    feature: document.getElementById('inp-feature').value || '',
+    notes: document.getElementById('inp-notes').value || '',
+    score: Math.floor(Math.random() * 40 + 40),
+    days: 0,
+    timeline: ['Added to pipeline'],
+    greenFlags: [],
+    redFlags: [],
+    dateLogs: [],
+  };
+  people.push(p);
+  renderAll();
+  closeModal();
+  ['inp-name','inp-age','inp-source','inp-feature','inp-notes'].forEach(id => document.getElementById(id).value = '');
+}
+
+function openPanel(id) {
+  const p = people.find(x => x.id === id);
+  if (!p) return;
+  const color = getStageColor(p.stage);
+  const nba = getNextAction(p);
+
+  const renderFlags = (flags, type) => flags.length === 0
+    ? `<span style="font-size:11px;color:var(--muted);font-style:italic">None noted yet</span>`
+    : flags.map((f, i) => `
+        <span class="flag-chip ${type}">${type==='green'?'🟢':'🔴'} ${f}
+          <span class="remove-flag" onclick="removeFlag(${id},'${type}',${i})">×</span>
+        </span>`).join('');
+
+  const renderDateLogs = () => {
+    if (!p.dateLogs || p.dateLogs.length === 0) return `<div style="font-size:12px;color:var(--muted);font-style:italic;padding:8px 0">No date logs yet. Add one below!</div>`;
+    return p.dateLogs.map((log, i) => `
+      <div class="date-log-entry">
+        <span class="del-log" onclick="removeLog(${id},'${log.id}')">🗑</span>
+        <div class="log-header">
+          <span class="log-date-badge">${log.date}</span>
+          <span class="log-stage-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${log.stage}</span>
+          <span class="log-rating">${'⭐'.repeat(log.rating)}${'☆'.repeat(5-log.rating)}</span>
+        </div>
+        <div class="log-comment">${log.comment}</div>
+        <div class="log-flags">
+          ${(log.greenFlags||[]).map(f=>`<span class="mini-flag green">🟢 ${f}</span>`).join('')}
+          ${(log.redFlags||[]).map(f=>`<span class="mini-flag red">🔴 ${f}</span>`).join('')}
+        </div>
+      </div>`).join('');
+  };
+
+  document.getElementById('panelContent').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="card-avatar" style="width:48px;height:48px;font-size:18px;background:${color}">${p.name.slice(0,2).toUpperCase()}</div>
+      <div>
+        <div class="panel-name">${p.name}, ${p.age}</div>
+        <div class="panel-stage">${STAGES[p.stage].emoji} ${STAGES[p.stage].name} · ${p.source}</div>
+      </div>
+    </div>
+
+    <div class="panel-section" style="margin-top:16px">
+      <div class="panel-section-title">Vibe Score</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="score-bar-bg" style="flex:1"><div class="score-bar" style="width:${p.score}%;background:${color};height:8px;border-radius:4px"></div></div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;color:${color}">${p.score}%</div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Next Best Action</div>
+      <div class="next-action-box">${nba.full}</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">🟢 Green Flags</div>
+      <div class="flags-row" id="gflags-${id}">${renderFlags(p.greenFlags||[], 'green')}</div>
+      <div class="flag-input-row">
+        <input class="flag-input" id="gflag-inp-${id}" placeholder="Add a green flag..." onkeydown="if(event.key==='Enter')addFlag(${id},'green')">
+        <button class="flag-btn green" onclick="addFlag(${id},'green')">🟢 Add</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">🔴 Red Flags</div>
+      <div class="flags-row" id="rflags-${id}">${renderFlags(p.redFlags||[], 'red')}</div>
+      <div class="flag-input-row">
+        <input class="flag-input" id="rflag-inp-${id}" placeholder="Add a red flag..." onkeydown="if(event.key==='Enter')addFlag(${id},'red')">
+        <button class="flag-btn red" onclick="addFlag(${id},'red')">🔴 Add</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">📅 Date Log (${p.dateLogs?.length||0} entries)</div>
+      <div id="date-logs-${id}">${renderDateLogs()}</div>
+      <div class="add-log-form">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Add Date Entry</div>
+        <textarea id="log-comment-${id}" placeholder="How did it go? What stood out? How did you feel after?"></textarea>
+        <div class="log-form-row">
+          <input type="date" class="flag-input" id="log-date-${id}" value="${new Date().toISOString().split('T')[0]}" style="max-width:140px">
+          <div class="rating-pick" id="log-stars-${id}" data-rating="3">
+            ${[1,2,3,4,5].map(n=>`<span onclick="setLogRating(${id},${n})" title="${n} stars">${n<=3?'⭐':'☆'}</span>`).join('')}
+          </div>
+          <input class="flag-input" id="log-gflag-${id}" placeholder="🟢 Green flag (optional)" style="max-width:160px">
+          <input class="flag-input" id="log-rflag-${id}" placeholder="🔴 Red flag (optional)" style="max-width:160px">
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn btn-primary" style="font-size:12px;padding:7px 16px" onclick="addDateLog(${id})">+ Log this date</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Standout Feature</div>
+      <div style="font-size:13px;color:var(--text)">${p.feature || 'Not noted yet'}</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Notes</div>
+      <textarea class="notes-area" onchange="updateNotes(${p.id},this.value)">${p.notes}</textarea>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Timeline</div>
+      ${p.timeline.map((t,i) => `
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div>
+            <div class="timeline-text">${t}</div>
+            <div class="timeline-date">Entry ${i+1}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Move Stage</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${STAGES.map((s,i) => `
+          <button class="btn ${i===p.stage?'btn-primary':'btn-ghost'}" 
+            style="${i===p.stage?'background:'+s.color+';color:#0d0a0e;':''}font-size:11px;padding:5px 10px"
+            onclick="moveStage(${p.id},${i})">
+            ${s.emoji} ${s.name}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red);font-size:12px" onclick="removePerson(${p.id})">× Remove from Pipeline</button>
+    </div>
+  `;
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('detailPanel').classList.remove('open');
+}
+
+function updateNotes(id, val) {
+  const p = people.find(x => x.id === id);
+  if (p) p.notes = val;
+}
+
+function moveStage(id, stage) {
+  const p = people.find(x => x.id === id);
+  if (!p) return;
+  const oldStage = p.stage;
+  p.stage = stage;
+  p.timeline.push(`Moved: ${STAGES[oldStage].name} → ${STAGES[stage].name}`);
+  renderAll();
+  openPanel(id);
+}
+
+function removePerson(id) {
+  if (!confirm('Remove from pipeline?')) return;
+  people = people.filter(x => x.id !== id);
+  closePanel();
+  renderAll();
+}
+
+function exportData() {
+  const csv = ['Name,Age,Source,Stage,Vibe,Score,Days,Feature,Notes', 
+    ...people.map(p => `${p.name},${p.age},${p.source},${STAGES[p.stage].name},${p.vibe},${p.score},${p.days},"${p.feature}","${p.notes}"`)
+  ].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'amore-pipeline.csv';
+  a.click();
+}
+
+function addFlag(id, type) {
+  const p = people.find(x => x.id === id);
+  if (!p) return;
+  const inp = document.getElementById(`${type[0]}flag-inp-${id}`);
+  const val = inp.value.trim();
+  if (!val) return;
+  if (type === 'green') p.greenFlags.push(val);
+  else p.redFlags.push(val);
+  inp.value = '';
+  renderAll();
+  openPanel(id);
+  // scroll panel to flags section
+  setTimeout(() => {
+    const el = document.getElementById(`${type[0]}flags-${id}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 50);
+}
+
+function removeFlag(id, type, idx) {
+  const p = people.find(x => x.id === id);
+  if (!p) return;
+  if (type === 'green') p.greenFlags.splice(idx, 1);
+  else p.redFlags.splice(idx, 1);
+  renderAll();
+  openPanel(id);
+}
+
+let logRatings = {};
+function setLogRating(id, rating) {
+  logRatings[id] = rating;
+  const container = document.getElementById(`log-stars-${id}`);
+  if (!container) return;
+  container.querySelectorAll('span').forEach((s, i) => {
+    s.textContent = i < rating ? '⭐' : '☆';
+  });
+}
+
+function addDateLog(id) {
+  const p = people.find(x => x.id === id);
+  if (!p) return;
+  const comment = document.getElementById(`log-comment-${id}`).value.trim();
+  if (!comment) return;
+  const date = document.getElementById(`log-date-${id}`).value || new Date().toISOString().split('T')[0];
+  const rating = logRatings[id] || 3;
+  const gf = document.getElementById(`log-gflag-${id}`).value.trim();
+  const rf = document.getElementById(`log-rflag-${id}`).value.trim();
+  const logEntry = {
+    id: 'd' + Date.now(),
+    date,
+    stage: STAGES[p.stage].name,
+    rating,
+    comment,
+    greenFlags: gf ? [gf] : [],
+    redFlags: rf ? [rf] : [],
+  };
+  if (!p.dateLogs) p.dateLogs = [];
+  p.dateLogs.unshift(logEntry);
+  p.timeline.push(`Date logged: ${date} (${STAGES[p.stage].name})`);
+  // auto-add inline flags to the person's global flags
+  if (gf && !p.greenFlags.includes(gf)) p.greenFlags.push(gf);
+  if (rf && !p.redFlags.includes(rf)) p.redFlags.push(rf);
+  delete logRatings[id];
+  renderAll();
+  openPanel(id);
+}
+
+function removeLog(id, logId) {
+  const p = people.find(x => x.id === id);
+  if (!p) return;
+  p.dateLogs = p.dateLogs.filter(l => l.id !== logId);
+  renderAll();
+  openPanel(id);
+}
+
+function renderAll() {
+  renderKPIs();
+  renderFunnel();
+  renderPipeline();
+  renderConvRates();
+  renderSignals();
+  renderNBA();
+  renderStandout();
+}
+
+renderAll();
+</script>
+</body>
+</html>
